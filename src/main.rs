@@ -4,7 +4,7 @@ use std::{env, process};
 fn main() {
     let args: Vec<String> = env::args().collect(); // collecting all arguments into a vector of
     let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("Problem parsing argument: {err}");
+        eprint!("Problem parsing the provided arguments; {err}");
         process::exit(1);
     });
 
@@ -13,7 +13,7 @@ fn main() {
     println!("================");
 
     if let Err(e) = mini_grep::run(config) {
-        println!("Application crashed {}", e);
+        eprintln!("Application crashed {e}");
         process::exit(1);
     }
 }
