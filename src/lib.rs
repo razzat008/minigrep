@@ -5,6 +5,7 @@ use std::{env, error::Error, fs, process};
 pub struct Config {
     pub query: String,     // string to look for
     pub file_path: String, // the file path
+    pub ignore_case: bool,
 }
 
 impl Config {
@@ -14,15 +15,26 @@ impl Config {
         }
         let query = args[1].clone();
         let file_path = args[2].clone();
+        let ignore_case = env::var("CASE").is_ok();
 
-        Ok(Config { query, file_path })
+        Ok(Config {
+            query,
+            file_path,
+            ignore_case,
+        })
     }
 }
 
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents =
-        fs::read_to_string(config.file_path).expect("Should have been able to read the file");
-    for line in search(&config.query, &contents) {
+    let contents = fs::read_to_string(config.file_path)?;
+
+    let results = if config.ignore_case {
+        search_case_insensitive(&config.query, &contents)
+    } else {
+        search(&config.query, &contents)
+    };
+
+    for line in results {
         println!("{line}");
     }
 
@@ -41,7 +53,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let query = query.to_lowercase();
+    let query = query.to_lowercase(); // ignoring all the uppercases
     let mut results = Vec::new();
 
     for line in contents.lines() {
